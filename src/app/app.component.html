@@ -1,0 +1,179 @@
+﻿<main class="shell">
+  <section class="workspace">
+    <article class="map-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Mapa interativo</p>
+          <h2>Contornos municipais em preto e branco</h2>
+        </div>
+
+        <button
+          class="ghost-button"
+          type="button"
+          (click)="clearVisited()"
+          [disabled]="visitedCount() === 0"
+        >
+          Limpar progresso
+        </button>
+      </div>
+
+      <p class="section-copy">
+        Clique em um municipio para seleciona-lo. Pela busca, escolha uma sugestao para focar direto
+        naquela cidade e deixar apenas ela em destaque no mapa.
+      </p>
+
+      <div class="map-frame map-frame--mono">
+        <div
+          #mapHost
+          class="municipality-map"
+          role="img"
+          aria-label="Mapa preto com contornos brancos dos municipios brasileiros"
+        ></div>
+
+        @if (loadingMap() || loadingError()) {
+          <div class="map-status" [class.map-status--error]="!!loadingError()">
+            <strong>{{ loadingError() ? 'Falha no carregamento' : 'Preparando o mapa' }}</strong>
+            <p>{{ loadingError() || loadingMessage() }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="legend legend--mono">
+        <span><i class="legend__dot legend__dot--outline"></i> Perimetro municipal</span>
+        <span><i class="legend__dot legend__dot--focus"></i> Municipio em foco</span>
+        <span><i class="legend__dot legend__dot--soft"></i> Fora do filtro atual</span>
+      </div>
+    </article>
+
+    <aside class="control-panel">
+      <section class="panel-card">
+        <div class="section-heading section-heading--compact">
+          <div>
+            <p class="eyebrow">Exploracao</p>
+            <h2>Filtre por UF ou busque um municipio</h2>
+          </div>
+        </div>
+
+        <label class="search">
+          <span>Buscar</span>
+          <input
+            type="search"
+            placeholder="Ex.: Manaus, Curitiba, PB, Nordeste"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="updateSearchTerm($event)"
+          />
+
+          @if (searchSuggestions().length > 0) {
+            <div class="search-suggestions">
+              @for (municipality of searchSuggestions(); track municipality.id) {
+                <button
+                  type="button"
+                  class="search-suggestion"
+                  (click)="selectSearchSuggestion(municipality.id)"
+                >
+                  <strong>{{ municipality.name }}</strong>
+                  <span>{{ municipality.stateCode }} · {{ municipality.stateName }}</span>
+                </button>
+              }
+            </div>
+          }
+        </label>
+
+        <div class="country-filter">
+          @for (state of states(); track state) {
+            <button
+              type="button"
+              class="country-filter__chip"
+              [class.country-filter__chip--active]="activeState() === state"
+              (click)="setState(state)"
+            >
+              {{ state }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="panel-card panel-card--spotlight panel-card--mono">
+        @if (activeMunicipality(); as municipality) {
+          <p class="eyebrow">Municipio em foco</p>
+          <h3>{{ municipality.name }}</h3>
+          <p class="spotlight__status">
+            {{ isVisited(municipality.id) ? 'Regiao explorada' : 'Pronto para marcar como visitado' }}
+          </p>
+
+          <div class="detail-map-shell">
+            <div
+              #detailMapHost
+              class="municipality-detail-map"
+              [class.municipality-detail-map--visible]="activeMunicipalityVisited()"
+              role="img"
+              [attr.aria-label]="'Recorte ilustrado do municipio ' + municipality.name"
+            ></div>
+
+            @if (!activeMunicipalityVisited()) {
+              <div class="detail-map-placeholder">
+                <strong>Recorte do municipio</strong>
+                <p>Marque este municipio como visitado para abrir o mapa ilustrado apenas dele.</p>
+              </div>
+            }
+          </div>
+
+          <p class="spotlight__meta">{{ municipality.stateName }} · {{ municipality.stateCode }}</p>
+          <p class="spotlight__copy">
+            Regiao {{ municipality.regionName }}, regiao intermediaria
+            {{ municipality.intermediateRegion }}, area de {{ municipality.areaKm2 | number: '1.0-2' }}
+            km2.
+          </p>
+
+          <button type="button" class="primary-button" (click)="toggleVisited(municipality.id)">
+            {{ isVisited(municipality.id) ? 'Desmarcar visita' : 'Marcar como visitado' }}
+          </button>
+        }
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading section-heading--compact">
+          <div>
+            <p class="eyebrow">Lista filtrada</p>
+            <h2>{{ filteredMunicipalities().length }} municipios visiveis</h2>
+          </div>
+        </div>
+
+        <div class="municipality-list">
+          @for (municipality of listedMunicipalities(); track trackByMunicipalityId($index, municipality)) {
+            <button
+              type="button"
+              class="municipality-row"
+              [class.municipality-row--active]="activeMunicipality().id === municipality.id"
+              (click)="selectMunicipality(municipality.id)"
+            >
+              <div class="municipality-row__copy">
+                <strong>{{ municipality.name }}</strong>
+                <span>{{ municipality.stateCode }} · {{ municipality.regionName }}</span>
+              </div>
+
+              <span
+                class="status-pill"
+                [class.status-pill--visited]="isVisited(municipality.id)"
+                (click)="$event.stopPropagation(); toggleVisited(municipality.id)"
+              >
+                {{ isVisited(municipality.id) ? 'Visitado' : 'Pendente' }}
+              </span>
+            </button>
+          } @empty {
+            <p class="empty-state">
+              Nenhum municipio encontrado com esse filtro. Tente trocar a UF ou limpar a busca.
+            </p>
+          }
+        </div>
+
+        @if (hiddenFilteredCount() > 0) {
+          <p class="list-footnote">
+            Mostrando {{ listedMunicipalities().length }} itens na lista para manter a tela leve.
+            Ainda existem {{ hiddenFilteredCount() }} municipios neste filtro.
+          </p>
+        }
+      </section>
+    </aside>
+  </section>
+</main>
