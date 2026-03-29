@@ -79,6 +79,21 @@
           }
         </label>
 
+        @if (activeMunicipality(); as municipality) {
+          <div class="quick-visit-action">
+            <div class="quick-visit-action__copy">
+              <strong>{{ municipality.name }}</strong>
+              <span>
+                {{ isVisited(municipality.id) ? 'Ja marcado como visitado' : 'Municipio pronto para marcar' }}
+              </span>
+            </div>
+
+            <button type="button" class="primary-button quick-visit-action__button" (click)="toggleVisited(municipality.id)">
+              {{ isVisited(municipality.id) ? 'Desmarcar visita' : 'Marcar como visitado' }}
+            </button>
+          </div>
+        }
+
         <div class="country-filter">
           @for (state of states(); track state) {
             <button

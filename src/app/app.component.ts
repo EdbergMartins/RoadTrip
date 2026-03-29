@@ -524,10 +524,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
 
     const strokeColor = isVisible ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.22)';
-    const fillColor = isActive
-      ? 'rgba(255,255,255,0.12)'
-      : isVisited
-        ? 'rgba(245, 158, 11, 0.58)'
+    const fillColor = isVisited
+      ? isActive
+        ? 'rgba(245, 158, 11, 0.72)'
+        : 'rgba(245, 158, 11, 0.58)'
+      : isActive
+        ? 'rgba(255,255,255,0.12)'
         : 'rgba(0,0,0,1)';
 
     const styles = [
