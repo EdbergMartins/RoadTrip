@@ -65,6 +65,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   readonly loadingMap = signal(true);
   readonly loadingMessage = signal('Carregando a malha municipal de 2024...');
   readonly loadingError = signal('');
+  readonly listOpen = signal(false);
 
   readonly states = computed(() => [
     'Todos',
@@ -143,6 +144,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   readonly activeMunicipality = computed(() => {
     const currentId = this.activeMunicipalityId();
 
+    if (!currentId) {
+      return undefined;
+    }
+
     return (
       this.municipalities().find((municipality) => municipality.id === currentId) ??
       this.filteredMunicipalities()[0]
@@ -178,7 +183,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const visibleIds = this.visibleMunicipalityIds();
         const currentId = this.activeMunicipalityId();
 
-        if (visibleIds.size > 0 && !visibleIds.has(currentId)) {
+        if (currentId && visibleIds.size > 0 && !visibleIds.has(currentId)) {
           const nextMunicipality = this.filteredMunicipalities()[0];
 
           if (nextMunicipality) {
